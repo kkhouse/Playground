@@ -1,0 +1,20 @@
+data class QiitaResItem(
+    val body: String,
+    val coediting: Boolean,
+    val comments_count: Int,
+    val created_at: String,
+    val group: Any?,
+    val id: String,
+    val likes_count: Int,
+    val page_views_count: Any,
+    val `private`: Boolean,
+    val reactions_count: Int,
+    val rendered_body: String,
+    val stocks_count: Int,
+    val tags: List<Tag>,
+    val team_membership: Any,
+    val title: String,
+    val updated_at: String,
+    val url: String,
+    val user: User
+)

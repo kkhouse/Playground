@@ -1,0 +1,26 @@
+[versions]
+# Define the dependency versions
+kotlin = "1.6.20"
+retrofit = "2.9.0"
+moshi = "1.14.0"
+okhttp3 = "4.9.0"
+
+[libraries]
+# Define the libraries
+retrofit_retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+retrofit_converter = { module = "com.squareup.retrofit2:converter-moshi", version.ref = "retrofit"}
+moshi_moshi = { module = "com.squareup.retrofit2:converter-moshi", version.ref = "retrofit"}
+okhttp3_okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp3"}
+okhttp3_logging = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp3"}
+## これらのエイリアス( hoge_fuga ) を参照するときは hoge.fugaで行う。
+## 「-、_、.」を持つすべてのエイリアスは「.」に正規化されるとのこと
+
+
+
+[bundles]
+# Define bundles/groups of libraries
+okhttp = ["okhttp3.okhttp", "okhttp3_logging"]
+
+
+[plugins]
+kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
