@@ -1,0 +1,24 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+    versionCatalogs {
+        create("libs") {
+            from(files("gradle/libraries.versions.toml"))
+        }
+        create("testLibs") {
+            from(files("gradle/libs-test.versions.toml"))
+        }
+    }
+}
+rootProject.name = "VersionCatalogPlayground"
+include ':app'

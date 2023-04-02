@@ -1,0 +1,14 @@
+[versions]
+coreKtx = "1.7.0"
+compose = "1.2.0"
+
+[libraries]
+androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
+compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose" }
+compose-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose" }
+
+[bundles]
+compose = ["compose-ui", "compose-preview"]
+
+[plugins]
+android-application = { id = "com.android.application", version = "7.4.1" }
