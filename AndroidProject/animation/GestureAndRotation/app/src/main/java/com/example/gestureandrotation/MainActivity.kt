@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.animation.core.Spring.DampingRatioMediumBouncy
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -18,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.consumeAllChanges
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -54,16 +56,13 @@ class MainActivity : ComponentActivity() {
                         var offsetY by remember { mutableStateOf(cardY) }
                         val animatedOffsetX by animateFloatAsState(
                             targetValue = offsetX,
-                            animationSpec = spring(
-                                dampingRatio = DampingRatioMediumBouncy,
-                            )
+                            animationSpec =  tween(durationMillis = 100)
                         )
                         val animatedOffsetY by animateFloatAsState(
                             targetValue = offsetY,
-                            animationSpec = spring(
-                                dampingRatio = DampingRatioMediumBouncy,
-                            )
+                            animationSpec = tween(durationMillis = 100)
                         )
+                        var rotateDegree by remember { mutableStateOf(0f) }
 
                         CardLayout(
                             modifier = Modifier
@@ -79,12 +78,18 @@ class MainActivity : ComponentActivity() {
                                             change.consume()
                                             offsetX += dragAmount.x
                                             offsetY += dragAmount.y
+                                            rotateDegree = if(dragAmount.x>0) 30f else -30f
                                         },
                                         onDragEnd = {
-                                            offsetX = cardX,
+                                            offsetX = cardX
                                             offsetY = cardY
+
+                                            rotateDegree = 0f
                                         }
                                     )
+                                }
+                                .graphicsLayer {
+                                    rotationZ = rotateDegree
                                 }
                                 .size(width = cardWidth, height = cardHeight)
                         )
