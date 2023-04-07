@@ -1,9 +1,9 @@
 package com.example.gestureandrotation
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.core.Spring.DampingRatioMediumBouncy
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -16,17 +16,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.consumeAllChanges
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role.Companion.Image
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
@@ -35,6 +31,8 @@ import androidx.compose.ui.unit.sp
 import com.example.gestureandrotation.ui.theme.GestureAndRotationTheme
 import kotlin.math.roundToInt
 
+
+private val TAG = "MainActivityTag"
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,25 +42,36 @@ class MainActivity : ComponentActivity() {
                 BoxWithConstraints(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    val maxWidth = this.constraints.maxWidth
-                    val maxHeight = this.constraints.maxHeight
+                    val maxHalfWidth = this.constraints.maxWidth
+                    val maxHalfHeight = this.constraints.maxHeight
+
                     val cardHeight = 600.dp
                     val cardWidth = 360.dp
                     with(density) {
-                        val cardX = (maxWidth/2) - (cardWidth/2).toPx()
-                        val cardY = (maxHeight/2) - (cardHeight/2).toPx()
+                        val cardX = (maxHalfWidth/2) - (cardWidth/2).toPx()
+                        val cardY = (maxHalfHeight/2) - (cardHeight/2).toPx()
 
                         var offsetX by remember { mutableStateOf(cardX) }
                         var offsetY by remember { mutableStateOf(cardY) }
+                        var isDragEnded by remember{ mutableStateOf(false) }
                         val animatedOffsetX by animateFloatAsState(
                             targetValue = offsetX,
-                            animationSpec =  tween(durationMillis = 100)
+                            animationSpec = if(isDragEnded) tween(durationMillis = 500) else spring(),//default
+                            finishedListener = { isDragEnded = false }
                         )
                         val animatedOffsetY by animateFloatAsState(
                             targetValue = offsetY,
-                            animationSpec = tween(durationMillis = 100)
+                            animationSpec = if(isDragEnded) tween(durationMillis = 500) else spring()//default
                         )
                         var rotateDegree by remember { mutableStateOf(0f) }
+                        val animateRotateDegree by animateFloatAsState(
+                            targetValue = rotateDegree,
+                            animationSpec = if (isDragEnded) tween(durationMillis = 500) else tween(durationMillis = 0)
+                        )
+
+                        var startOffsetX by remember { mutableStateOf(0f) }
+
+                        val maxAngle = 45f
 
                         CardLayout(
                             modifier = Modifier
@@ -74,28 +83,43 @@ class MainActivity : ComponentActivity() {
                                 }
                                 .pointerInput(Unit) {
                                     detectDragGestures(
+                                        onDragStart = { startOffsetX = it.x },
                                         onDrag = { change, dragAmount ->
                                             change.consume()
                                             offsetX += dragAmount.x
                                             offsetY += dragAmount.y
-                                            rotateDegree = if(dragAmount.x>0) 30f else -30f
+                                            val maxSwipe = 1000f
+                                            val swipeDistance = when (offsetX >= cardX) {
+                                                true -> offsetX - cardX // 右スワイプ
+                                                else -> cardX - offsetX // 左スワイプ
+                                            }
+                                            val angleRatio = when(offsetX >= cardX) {
+                                                true -> swipeDistance.coerceIn(0f, maxSwipe) / maxSwipe // 左スワイプ
+                                                else -> -( swipeDistance.coerceIn(0f, maxSwipe) / maxSwipe) // 右スワイプ
+                                            }
+
+                                            val targetAngle = maxAngle / 2
+                                            val angleDelta = targetAngle * angleRatio
+                                            rotateDegree = angleDelta
                                         },
                                         onDragEnd = {
+                                            isDragEnded = true
                                             offsetX = cardX
                                             offsetY = cardY
-
                                             rotateDegree = 0f
                                         }
                                     )
                                 }
                                 .graphicsLayer {
-                                    rotationZ = rotateDegree
+                                    rotationZ = animateRotateDegree
                                 }
                                 .size(width = cardWidth, height = cardHeight)
                         )
 
                         Text(
-                            modifier = Modifier.fillMaxSize().align(Alignment.BottomCenter),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .align(Alignment.BottomCenter),
                             text = "posX : $offsetX, posY: $offsetY",
                         )
                     }
