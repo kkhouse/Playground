@@ -16,6 +16,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -24,15 +27,90 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.gestureandrotation.DraggableCardConst.maxAngle
+import com.example.gestureandrotation.DraggableCardConst.maxAngleSwipeDistance
+import com.example.gestureandrotation.SwipingState.Companion.createSwipingState
+import com.example.gestureandrotation.SwipingState.Companion.isRightSwiping
 import com.example.gestureandrotation.ui.theme.GestureAndRotationTheme
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 
 private val TAG = "MainActivityTag"
+data class SwipingCardLayoutState(
+    val swipingState: SwipingState = SwipingState.CENTER,
+    val alphaText: String = "",
+    val alpha: Float = 0f
+)
+
+enum class SwipingState {
+    RIGHT, LEFT, CENTER;
+
+    companion object {
+        fun SwipingState.isRightSwiping(): Boolean = this == RIGHT
+
+        fun createSwipingState(cardX: Float, offsetX: Float) : SwipingState {
+            return when {
+                offsetX > cardX -> RIGHT
+                offsetX < cardX -> LEFT
+                else -> CENTER
+            }
+        }
+    }
+}
+
+private data class DraggableCardState(
+    val offset: Offset = Offset(x = 0f, y = 0f),
+    val isDragEnded: Boolean = false,
+    val rotateDegree: Float = 0f,
+    val swipingCardText: SwipingCardLayoutState = SwipingCardLayoutState(),
+    val swipingState: SwipingState = SwipingState.CENTER
+) {
+
+    fun createSwipeDistance(cardX: Float): Float {
+        return when (swipingState.isRightSwiping()) {
+            true -> offset.x - cardX
+            else -> cardX - offset.x
+        }
+    }
+    fun createAngleRatio(cardX: Float) : Float {
+        return when(swipingState.isRightSwiping()) {
+            true -> createSwipeDistance(cardX).coerceIn(0f, maxAngleSwipeDistance).unaryMinus() / maxAngleSwipeDistance
+            else -> createSwipeDistance(cardX).coerceIn(0f, maxAngleSwipeDistance) / maxAngleSwipeDistance
+        }
+    }
+    fun createAngleDelta(cardX: Float): Float {
+        return createAngleRatio(cardX) * maxAngle.div(2)
+    }
+
+    fun createCardLayoutState(cardX: Float): SwipingCardLayoutState {
+        val alpha = abs(createAngleDelta(cardX) / maxAngle).plus(0.4f) // default alpha value
+        return when(swipingState) {
+            SwipingState.RIGHT -> SwipingCardLayoutState(
+                swipingState = SwipingState.RIGHT, alpha = alpha, alphaText = "RIGHT"
+            )
+            SwipingState.LEFT -> SwipingCardLayoutState(
+                swipingState = SwipingState.LEFT, alpha = alpha, alphaText = "LEFT"
+            )
+            SwipingState.CENTER -> SwipingCardLayoutState(
+                swipingState = SwipingState.CENTER, alpha = 0f, alphaText = ""
+            )
+        }
+    }
+
+}
+
+object DraggableCardConst {
+    val cardHeight = 600.dp // DP
+    val cardWidth = 360.dp // DP
+    const val maxAngle = 45f
+    const val maxAngleSwipeDistance = 1000f
+}
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,33 +123,24 @@ class MainActivity : ComponentActivity() {
                     val maxHalfWidth = this.constraints.maxWidth
                     val maxHalfHeight = this.constraints.maxHeight
 
-                    val cardHeight = 600.dp
-                    val cardWidth = 360.dp
                     with(density) {
-                        val cardX = (maxHalfWidth/2) - (cardWidth/2).toPx()
-                        val cardY = (maxHalfHeight/2) - (cardHeight/2).toPx()
+                        val cardX = (maxHalfWidth/2) - (DraggableCardConst.cardWidth/2).toPx()
+                        val cardY = (maxHalfHeight/2) - (DraggableCardConst.cardHeight/2).toPx()
+                        var draggableState by remember { mutableStateOf(DraggableCardState(offset = Offset(cardX, cardY))) }
 
-                        var offsetX by remember { mutableStateOf(cardX) }
-                        var offsetY by remember { mutableStateOf(cardY) }
-                        var isDragEnded by remember{ mutableStateOf(false) }
                         val animatedOffsetX by animateFloatAsState(
-                            targetValue = offsetX,
-                            animationSpec = if(isDragEnded) tween(durationMillis = 500) else spring(),//default
-                            finishedListener = { isDragEnded = false }
+                            targetValue = draggableState.offset.x,
+                            animationSpec = if(draggableState.isDragEnded) tween(durationMillis = 500) else spring(),//default
+                            finishedListener = { draggableState = draggableState.copy(isDragEnded = false) }
                         )
                         val animatedOffsetY by animateFloatAsState(
-                            targetValue = offsetY,
-                            animationSpec = if(isDragEnded) tween(durationMillis = 500) else spring()//default
+                            targetValue = draggableState.offset.y,
+                            animationSpec = if(draggableState.isDragEnded) tween(durationMillis = 500) else spring()//default
                         )
-                        var rotateDegree by remember { mutableStateOf(0f) }
                         val animateRotateDegree by animateFloatAsState(
-                            targetValue = rotateDegree,
-                            animationSpec = if (isDragEnded) tween(durationMillis = 500) else tween(durationMillis = 0)
+                            targetValue = draggableState.rotateDegree,
+                            animationSpec = if (draggableState.isDragEnded) tween(durationMillis = 500) else tween(durationMillis = 0)
                         )
-
-                        var startOffsetX by remember { mutableStateOf(0f) }
-
-                        val maxAngle = 45f
 
                         CardLayout(
                             modifier = Modifier
@@ -83,44 +152,45 @@ class MainActivity : ComponentActivity() {
                                 }
                                 .pointerInput(Unit) {
                                     detectDragGestures(
-                                        onDragStart = { startOffsetX = it.x },
                                         onDrag = { change, dragAmount ->
                                             change.consume()
-                                            offsetX += dragAmount.x
-                                            offsetY += dragAmount.y
-                                            val maxSwipe = 1000f
-                                            val swipeDistance = when (offsetX >= cardX) {
-                                                true -> offsetX - cardX // 右スワイプ
-                                                else -> cardX - offsetX // 左スワイプ
-                                            }
-                                            val angleRatio = when(offsetX >= cardX) {
-                                                true -> swipeDistance.coerceIn(0f, maxSwipe) / maxSwipe // 左スワイプ
-                                                else -> -( swipeDistance.coerceIn(0f, maxSwipe) / maxSwipe) // 右スワイプ
-                                            }
-
-                                            val targetAngle = maxAngle / 2
-                                            val angleDelta = targetAngle * angleRatio
-                                            rotateDegree = angleDelta
+                                            draggableState = draggableState.copy(
+                                                offset = Offset(
+                                                    x = draggableState.offset.x + dragAmount.x,
+                                                    y = draggableState.offset.y + dragAmount.y
+                                                ),
+                                                rotateDegree = draggableState.createAngleDelta(cardX),
+                                                swipingState = createSwipingState(
+                                                    cardX,
+                                                    draggableState.offset.x + dragAmount.x
+                                                )
+                                            )
                                         },
                                         onDragEnd = {
-                                            isDragEnded = true
-                                            offsetX = cardX
-                                            offsetY = cardY
-                                            rotateDegree = 0f
+                                            draggableState = draggableState.copy(
+                                                isDragEnded = true,
+                                                offset = Offset(x = cardX, y = cardY),
+//                                                when(draggableState.offset.x < 500f) {
+//                                                    true -> Offset(x = cardX, y = cardY)
+//                                                    else -> Offset(
+//                                                        x = draggableState.offset.x + 500f,
+//                                                        y = draggableState.offset.y + 500f
+//                                                    )
+//                                                },
+                                                rotateDegree = 0f,
+                                                swipingState = SwipingState.CENTER,
+                                            )
                                         }
                                     )
                                 }
                                 .graphicsLayer {
                                     rotationZ = animateRotateDegree
                                 }
-                                .size(width = cardWidth, height = cardHeight)
-                        )
-
-                        Text(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .align(Alignment.BottomCenter),
-                            text = "posX : $offsetX, posY: $offsetY",
+                                .size(
+                                    width = DraggableCardConst.cardWidth,
+                                    height = DraggableCardConst.cardHeight
+                                ),
+                            textState = draggableState.createCardLayoutState(cardX)
                         )
                     }
                 }
@@ -134,19 +204,28 @@ class MainActivity : ComponentActivity() {
 fun CardLayout(
     modifier: Modifier,
     name: String = "Hogehoge",
-    image: Int = R.drawable.android_pur
+    image: Int = R.drawable.android_pur,
+    textState: SwipingCardLayoutState = SwipingCardLayoutState()
 ) {
+    val animateAlpha by animateFloatAsState(targetValue = textState.alpha)
     Card(
         shape = RoundedCornerShape(16.dp),
         modifier = modifier
     ) {
-        Box(
-            modifier = Modifier.background(
-                Brush.verticalGradient(
-                    colors = listOf(Color.LightGray, Color.DarkGray)
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color.LightGray, Color.DarkGray)
+                    )
                 )
-            )
         ) {
+            val textBoxSize = Size(width = 120f, height = 80f)
+            val rightTextXPos = maxWidth - textBoxSize.width.dp - 60.dp
+            val leftTextXPos =  60.dp
+            val textYPos = 12.dp
+
             Image(
                 painter = painterResource(id = image),
                 contentDescription = "background image",
@@ -162,6 +241,59 @@ fun CardLayout(
                     text = name,
                     style = TextStyle(color = Color.White, fontSize = 24.sp),
                     modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .size(textBoxSize.width.dp, textBoxSize.height.dp)
+                    .offset {
+                        when (textState.swipingState) {
+                            SwipingState.LEFT -> IntOffset(
+                                x = rightTextXPos
+                                    .toPx()
+                                    .roundToInt(),
+                                y = textYPos
+                                    .toPx()
+                                    .roundToInt()
+                            )
+                            SwipingState.RIGHT -> IntOffset(
+                                x = leftTextXPos
+                                    .toPx()
+                                    .roundToInt(),
+                                y = textYPos
+                                    .toPx()
+                                    .roundToInt()
+                            )
+                            SwipingState.CENTER -> IntOffset(0, 0)
+                        }
+                    }
+                    .graphicsLayer {
+                        rotationZ = when (textState.swipingState) {
+                            SwipingState.RIGHT -> -30f
+                            SwipingState.LEFT -> 30f
+                            SwipingState.CENTER -> 0f
+                        }
+                    }
+            ) {
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .alpha(animateAlpha),
+                    text = textState.alphaText,
+                    style = TextStyle(
+                        fontSize = 24.sp,
+                        color = when(textState.swipingState) {
+                            SwipingState.RIGHT -> Color.Green
+                            SwipingState.LEFT -> Color.Red
+                            SwipingState.CENTER -> Color.Transparent
+                        }
+                    ),
+                    textAlign = when(textState.swipingState) {
+                        SwipingState.LEFT -> TextAlign.End
+                        SwipingState.RIGHT -> TextAlign.Start
+                        SwipingState.CENTER -> null
+                    }
                 )
             }
         }
