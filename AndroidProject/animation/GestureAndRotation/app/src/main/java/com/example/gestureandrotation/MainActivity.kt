@@ -169,14 +169,19 @@ class MainActivity : ComponentActivity() {
                                         onDragEnd = {
                                             draggableState = draggableState.copy(
                                                 isDragEnded = true,
-                                                offset = Offset(x = cardX, y = cardY),
-//                                                when(draggableState.offset.x < 500f) {
-//                                                    true -> Offset(x = cardX, y = cardY)
-//                                                    else -> Offset(
-//                                                        x = draggableState.offset.x + 500f,
-//                                                        y = draggableState.offset.y + 500f
-//                                                    )
-//                                                },
+                                                offset = when(abs(draggableState.offset.x) < 800f) {
+                                                    true -> Offset(x = cardX, y = cardY)
+                                                    else -> when(draggableState.swipingState.isRightSwiping()){
+                                                        true -> Offset(
+                                                            x = draggableState.offset.x + 500f,
+                                                            y = draggableState.offset.y + 500f
+                                                        )
+                                                        else -> Offset(
+                                                            x = draggableState.offset.x - 500f,
+                                                            y = draggableState.offset.y + 500f
+                                                        )
+                                                    }
+                                                },
                                                 rotateDegree = 0f,
                                                 swipingState = SwipingState.CENTER,
                                             )
