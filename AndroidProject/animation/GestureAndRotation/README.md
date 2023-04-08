@@ -1,1 +1,1 @@
-<img src="./swipableCard.gif">
+<img src="./swipableCard.gif" width="240">
