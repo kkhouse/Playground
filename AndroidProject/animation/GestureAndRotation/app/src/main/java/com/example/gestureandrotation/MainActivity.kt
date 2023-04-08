@@ -84,7 +84,7 @@ private data class DraggableCardState(
     }
 
     fun createCardLayoutState(cardX: Float): SwipingCardTextState {
-        val alpha = abs(createAngleDelta(cardX) / maxAngle).plus(0.4f) // default alpha value
+        val alpha = abs(createAngleRatio(cardX)).plus(0.4f)// default alpha value
         return when(swipingState) {
             SwipingState.RIGHT -> SwipingCardTextState(
                 swipingState = SwipingState.RIGHT, alpha = alpha, alphaText = "RIGHT"
