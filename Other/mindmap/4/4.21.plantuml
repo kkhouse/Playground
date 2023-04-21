@@ -1,0 +1,35 @@
+@startmindmap
+!define AWESOME mindmap
+!define AWESOME_COLOR #E06666
+!define GOOD mindmap
+!define GOOD_COLOR #6AA84F
+!define INFO mindmap
+!define INFO_COLOR #3C78D8
+!define MINOR mindmap
+!define MINOR_COLOR #674EA7
+
+* マインドマップ
+** 英語
+*** モチベーション
+**** アプリを作る
+**** みずきちんの影響
+**** 中学英語で問題ない
+*** 思考を英語に
+**** 検索できる環境
+**** PixelWatch音声認識
+*** アプリ作成
+**** TextToSpeech
+**** SpeechToText
+**** OpenAI ChatCompletion
+*** 英語上達方法
+**** 単語力
+**** 基本動詞・熟語力
+** Twitter図解
+*** 図解で理解する
+** 転職準備
+*** ポートフォリオ作成
+*** 友人の海外勤務に触発される
+** 違いを体感
+*** コーヒーの味
+*** ウィスキーの味と香り
+@endmindmap
