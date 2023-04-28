@@ -33,5 +33,6 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
     implementation("io.ktor:ktor-client-cio:$ktor_version")
     implementation("net.jthink:jaudiotagger:3.0.1")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
 
 }

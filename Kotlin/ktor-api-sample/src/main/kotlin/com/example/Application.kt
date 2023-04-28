@@ -5,9 +5,11 @@ import com.example.plugins.configureSerialization
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.util.*
 import kotlinx.coroutines.runBlocking
@@ -19,6 +21,8 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
+import kotlinx.serialization.Serializable
+
 
 
 //fun main(args: Array<String>): Unit =
@@ -30,10 +34,19 @@ fun Application.module() {
     configureRouting()
 }
 
+@Serializable
+data class Audio(val sampleRate: Int, val channels: Int, val data: ByteArray)
+
 @OptIn(InternalAPI::class)
 fun main(args: Array<String>): Unit {
 //    getFileData()
-    val client = HttpClient(CIO)
+//    val client = HttpClient(CIO)
+
+    val client = HttpClient(CIO) {
+        install(ContentNegotiation) {
+            json()
+        }
+    }
 
     val currentDirPath = Paths.get("").toAbsolutePath()
     val file = "${currentDirPath}/sample.flac"
@@ -52,10 +65,16 @@ fun main(args: Array<String>): Unit {
         throw IllegalAccessError()
     }
 
+    val audio = Audio(44100, 2, byteArray) // 仮の音声データ
+
     Thread.sleep(1000)
     runBlocking {
+        // val response = client.post("http://localhost:8080/upload") {
+        //     body = ByteArrayContent(byteArray, ContentType.Audio.Any)
+        // }
         val response = client.post("http://localhost:8080/upload") {
-            body = ByteArrayContent(byteArray, ContentType.Audio.Any)
+            contentType(ContentType.Application.Json)
+            setBody(audio)
         }
 
         println(response.body() as? String)
