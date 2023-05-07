@@ -6,11 +6,9 @@ package myapplication
 import kotlin.math.* 
 
 fun main(args: Array<String>) {
-    // val intList = args.map { it.toDouble() }
-    // val a = intList[0]
-    // val b = intList[1]
-
-    println(someSums(14,2,4))
+    // Run/EditConfiguration
+    val apiKey = System.getenv("HOGE")
+    println(apiKey)
 }
 // Serval vs Monster
 typealias Monster = Double 

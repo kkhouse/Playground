@@ -81,7 +81,7 @@ fun main(args: Array<String>): Unit {
         println("SIZE ${byteArray.size}")
     }
 
-    Thread.sleep(100000)
+    Thread.sleep(10000)
 }
 
 fun getFileData() {
