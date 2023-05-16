@@ -2,8 +2,8 @@
 
 https://github.com/kkhouse/MVIKotlin-DecomposeSampleApp
 
-<img src="./res/lottieAnimation.gif" width="120">
-<img src="./res/scroll.gif" width="120">
+<img src="./res/scrollable.gif" width="120">
+<img src="./res/lottie.gif" width="120">
 
 # ZLotationCard
 src path : ../ZlotationCard
