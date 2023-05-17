@@ -43,7 +43,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             RawTabRowTheme {
-                ThreeColumTab({}, TabType.Left)
+                var tab by remember { mutableStateOf(TabType.Left) }
+                ThreeColumTab({tab = it}, tab)
             }
         }
     }
@@ -243,7 +244,7 @@ fun ThreeColumTab(
                     }
                     TabType.Right -> {
                         indicatorWidth = rightTextWidth.toDp()
-                        indicatorLeftTabPos = rightTextXPos.toDp()
+                        indicatorRightTabPos = rightTextXPos.toDp()
                     }
                 }
                 indicator?.placeRelative(
