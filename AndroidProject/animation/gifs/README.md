@@ -1,9 +1,3 @@
-# LottieAnimationSample ,ScrollSample
-
-https://github.com/kkhouse/MVIKotlin-DecomposeSampleApp
-
-<img src="./res/scrollable.gif" width="120">
-<img src="./res/lottie.gif" width="120">
 
 # ZLotationCard
 src path : ../ZlotationCard
@@ -16,3 +10,10 @@ src path : ../ZlotationCard
 src path : ../GestureAndRotation
 
 <img src="./res/swipableCard.gif" width="120">
+
+# LottieAnimationSample ,ScrollSample
+
+https://github.com/kkhouse/MVIKotlin-DecomposeSampleApp
+
+<img src="./res/scrollable.gif" width="120">
+<img src="./res/lottie.gif" width="120">
