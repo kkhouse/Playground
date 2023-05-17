@@ -1,4 +1,9 @@
 
+# Canvas PieChart
+
+src path ../PieChart
+<img src="./pieChart">
+
 # ZLotationCard
 src path : ../ZlotationCard
 
