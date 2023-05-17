@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             RawTabRowTheme {
-
+                ThreeColumTab({}, TabType.Left)
             }
         }
     }
@@ -155,9 +155,9 @@ fun ThreeColumTab(
                     modifier = Modifier
                         .layoutId("centerTabArea")
                         .size(
-                            width = firstTabAreaSize.width
+                            width = secondTabAreaSize.width
                                 .roundToInt().toDp(context()),
-                            height = firstTabAreaSize.height
+                            height = secondTabAreaSize.height
                                 .roundToInt().toDp(context()),
                         )
                         .clickable { onTabTapped(TabType.Center) }
@@ -166,9 +166,9 @@ fun ThreeColumTab(
                     modifier = Modifier
                         .layoutId("rightTabArea")
                         .size(
-                            width = firstTabAreaSize.width
+                            width = thirdTabAreaSize.width
                                 .roundToInt().toDp(context()),
-                            height = firstTabAreaSize.height
+                            height = thirdTabAreaSize.height
                                 .roundToInt().toDp(context()),
                         )
                         .clickable { onTabTapped(TabType.Right) }
@@ -192,7 +192,7 @@ fun ThreeColumTab(
             val centerTextWidth = centerText?.width  ?: 0
             val rightTextWidth = rightText?.width  ?: 0
             val separatorWidth = leftSeparator?.width ?: 0
-            val textHorizontalPadding = (constraints.maxWidth - leftTextWidth - centerTextWidth - rightTextWidth) / 6
+            val textHorizontalPadding = (constraints.maxWidth - leftTextWidth - centerTextWidth - rightTextWidth - separatorWidth - separatorWidth) / 6
 
             /* heightの計算 */
             val textYPos = 12.dp.toPx().roundToInt() // 仕様
@@ -211,22 +211,22 @@ fun ThreeColumTab(
                 leftText?.placeRelative(x = textHorizontalPadding, y = textYPos)
                 val leftSeparatorXPos = textHorizontalPadding + leftTextWidth + textHorizontalPadding
                 leftSeparator?.placeRelative(x = leftSeparatorXPos, y = separatorYPos)
-                val centerTextPos = leftSeparatorXPos + textHorizontalPadding
-                centerText?.placeRelative(x = centerTextPos, y = textYPos)
-                val rightSeparatorXPos = centerTextPos + centerTextWidth + textHorizontalPadding
+                val centerTextXPos = leftSeparatorXPos + separatorWidth + textHorizontalPadding
+                centerText?.placeRelative(x = centerTextXPos, y = textYPos)
+                val rightSeparatorXPos = centerTextXPos + centerTextWidth + textHorizontalPadding
                 rightSeparator?.placeRelative(x = rightSeparatorXPos, y = separatorYPos)
-                val rightTextXPos = rightSeparatorXPos + textHorizontalPadding
+                val rightTextXPos = rightSeparatorXPos + separatorWidth + textHorizontalPadding
                 rightText?.placeRelative(x = rightTextXPos, y = textYPos)
 
                 /*
                 タップ領域
                  */
                 firstTabAreaSize = Size(width = leftSeparatorXPos.toFloat(), contentHeight)
-                secondTabAreaSize = Size(width = (rightSeparatorXPos - leftSeparatorXPos).toFloat(), height = contentHeight)
-                thirdTabAreaSize = Size(width = (constraints.maxWidth - rightSeparatorXPos).toFloat(), height = contentHeight)
+                secondTabAreaSize = Size(width = (rightSeparatorXPos - leftSeparatorXPos - separatorWidth).toFloat(), height = contentHeight)
+                thirdTabAreaSize = Size(width = (constraints.maxWidth - rightSeparatorXPos - separatorWidth).toFloat(), height = contentHeight)
                 leftArea?.placeRelative(x = 0, y = 0)
-                centerArea?.placeRelative(x = leftSeparatorXPos, y = 0)
-                rightArea?.placeRelative(x = rightSeparatorXPos, y = 0)
+                centerArea?.placeRelative(x = leftSeparatorXPos + separatorWidth, y = 0)
+                rightArea?.placeRelative(x = rightSeparatorXPos + separatorWidth, y = 0)
 
                 grayDivider?.placeRelative(
                     x = 0,
@@ -235,15 +235,15 @@ fun ThreeColumTab(
                 when(currentTab) {
                     TabType.Left -> {
                         indicatorWidth = leftTextWidth.toDp()
-                        indicatorLeftTabPos = (textHorizontalPadding).toDp()
+                        indicatorLeftTabPos = textHorizontalPadding.toDp()
                     }
                     TabType.Center -> {
-                        indicatorWidth = leftTextWidth.toDp()
-                        indicatorCenterTabPos = (leftSeparatorXPos + textHorizontalPadding).toDp()
+                        indicatorWidth = centerTextWidth.toDp()
+                        indicatorCenterTabPos = centerTextXPos.toDp()
                     }
                     TabType.Right -> {
-                        indicatorWidth = leftTextWidth.toDp()
-                        indicatorLeftTabPos = (leftSeparatorXPos + textHorizontalPadding).toDp()
+                        indicatorWidth = rightTextWidth.toDp()
+                        indicatorLeftTabPos = rightTextXPos.toDp()
                     }
                 }
                 indicator?.placeRelative(
