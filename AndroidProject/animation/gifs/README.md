@@ -16,4 +16,5 @@ src path : ../GestureAndRotation
 https://github.com/kkhouse/MVIKotlin-DecomposeSampleApp
 
 <img src="./res/scrollable.gif" width="120">
+
 <img src="./res/lottie.gif" width="120">
