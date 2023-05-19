@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -68,7 +70,7 @@ class MainActivity : ComponentActivity() {
 
                 Box(
                     modifier = Modifier
-                        .background(Color.Cyan)
+                        .background(Color.White)
                         .fillMaxSize()
                         .nestedScroll(nestedScrollConnection)
                 ) {
@@ -84,36 +86,64 @@ class MainActivity : ComponentActivity() {
                             },
                             nestedScrollConnection = nestedScrollConnection,
                             firstBarAlphaContent = {
-                                Column {
+                                /*
+                                スクロールで画面外に消えつつ、透過されていく部品
+                                 */
+                                Column(
+                                    modifier = Modifier.alpha(contentAlpha)
+                                ) {
                                     Spacer(modifier = Modifier.height(80.dp))
                                     Card(
                                         Modifier
                                             .size(width = 360.dp, height = 240.dp)
                                     ) {
                                         Box(Modifier.fillMaxSize()) {
-                                            Text(text = "main card", modifier = Modifier.align(Alignment.Center))
+                                            Text(text = "alpha content", modifier = Modifier.align(Alignment.Center))
                                         }
                                     }
                                 }
                             },
                             firstBarNonAlphaContent = {
-//                                Card(
-//                                    Modifier
-//                                        .size(width = 120.dp, height = 240.dp)
-//                                ) {
-//                                    Box(Modifier.fillMaxSize()) {
-//                                        Text(text = "sub card", modifier = Modifier.align(Alignment.Center))
-//                                    }                                }
+                                /*
+                              スクロールで画面外に消えつつ、透過されない部品
+                               */
+                                Column(
+                                ) {
+                                    Spacer(modifier = Modifier.height(20.dp))
+                                    Card(
+                                        Modifier
+                                            .size(width = 360.dp, height = 24.dp)
+                                    ) {
+                                        Box(Modifier.fillMaxSize()) {
+                                            Text(text = "non alpha content", modifier = Modifier.align(Alignment.Center))
+                                        }
+                                    }
+                                }
                             },
                             iconBar = {
-                                TopAppBar(title = { Text(text = "First Bar") })
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(60.dp)
+                                ) {
+                                    Text(text = "Title", modifier = Modifier.align(Alignment.Center))
+                                }
                             },
                             secondBar = {
-                                TopAppBar(title = { Text(text = "First Bar") })
+                                // 背景
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(60.dp)
+                                        .background(Color.Red).alpha(0.6f)
+                                ){
+
+                                }
                             },
+                            firstBarSurfaceBackground = Color.White,
                             offsetState = offsetState,
                             onAlphaRangeConfirmed = {
-                                if(offsetState.value >= 0f) {
+                                if (offsetState.value >= 0f) {
                                     contentAlpha = 1f
                                 } else  {
                                     contentAlpha = (1 + (offsetState.value / it)).coerceIn(0f, 1f)
@@ -124,7 +154,6 @@ class MainActivity : ComponentActivity() {
                                 nestedScrollConnection.minOffset =
                                     (-it).coerceAtMost(0f)
                             },
-                            firstBarSurfaceBackground = Color.White,
                             contentAlpha = contentAlpha,
                         )
 
@@ -135,6 +164,7 @@ class MainActivity : ComponentActivity() {
                                     top.linkTo(firstBarArea.bottom)
                                     start.linkTo(parent.start)
                                 },
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
                             state = listState
                         ) {
                             item { Spacer(modifier = Modifier.height(36.dp)) }
