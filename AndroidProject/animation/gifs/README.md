@@ -2,14 +2,19 @@
 # Canvas PieChart
 
 src path ../PieChart
-<img src="./pieChart">
 
-# ZLotationCard
+<img src="./res/canas_pieChart.gif" width="120">
+
+# LotationCard
 src path : ../ZlotationCard
 
 <img src="./res/zlotationCard.gif" width="120">
 
 <br>
+
+# transforming content sample
+
+<img src="./res/scrollstate.gif" width="120">
 
 # Swipeable Card Sample
 src path : ../GestureAndRotation
