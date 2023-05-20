@@ -12,8 +12,10 @@ import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -22,15 +24,20 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,6 +54,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 
 data class TargetViewInfo(
     val topLeft: DpOffset = DpOffset(0.dp,0.dp),
@@ -182,10 +190,9 @@ fun SampleContainerAnimationBox(
                 .offset(offsetX, offsetY)
                 .background(Color.White)
         ) {
-            Image(
-                modifier = Modifier.fillMaxSize(),
-                painter = painterResource(id = data.data.img),
-                contentDescription = ""
+            ImageContainerScreen(
+                res = data.data.img,
+                transitionDuration = transitionDuration
             )
         }
     }
@@ -194,58 +201,53 @@ fun SampleContainerAnimationBox(
         onBackPressed()
     }
 }
-//
-//@Composable
-//fun Demo(data : ViewPoint,
-//         isVisible: Boolean,
-//         onBackPressed: () -> Unit = {},
-//         content: @Composable BoxScope.() -> Unit = {})
-//{
-//    var visibilityContent by remember { mutableStateOf(true) }
-//    LaunchedEffect(isVisible) {
-//        if (isVisible) { visibilityContent = true }
-//    }
-//
-//    val screenWidth = LocalConfiguration.current.screenWidthDp
-//    val screenHeight = LocalConfiguration.current.screenHeightDp
-//    if(visibilityContent) {
-//        var viewData by remember { mutableStateOf(data) }
-//
-//        val animateWidth by animateDpAsState(targetValue = viewData.width, label = "")
-//        val animateOffsetX by animateDpAsState(targetValue = viewData.topLeft.x, label = "")
-//        val animateOffsetY by animateDpAsState(targetValue = viewData.topLeft.y, label = "")
-//        val animateHeight by animateDpAsState(targetValue = viewData.height, label = "",
-//            finishedListener = {
-//                if(!isVisible) { visibilityContent = false }
-//            }
-//        )
-//        Box(
-//            modifier = Modifier
-//                .size(width = animateWidth, height = animateHeight)
-//                .offset(animateOffsetX, animateOffsetY)
-//                .background(Color.White)
-//        ) {
-//            Image(
-//                modifier = Modifier.fillMaxSize(),
-//                painter = painterResource(id = viewData.data.img),
-//                contentDescription = ""
-//            )
-////             content()
-//        }
-//        LaunchedEffect(key1 = isVisible) {
-//            if (isVisible) {
-//                viewData.copy(
-//                    width = screenWidth.dp, height = screenHeight.dp, topLeft = DpOffset(0.dp,0.dp),
-//                ).also { viewData = it }
-//            } else {
-//                viewData.copy(
-//                    width = data.width, height = data.height, topLeft = data.topLeft,
-//                ).also { viewData = it }
-//            }
-//        }
-//    }
-//
-//    BackHandler {
-//        onBackPressed()
-//    }
-//}
+
+@Composable
+fun ImageContainerScreen(
+    @DrawableRes res: Int,
+    transitionDuration: Int,
+    bottomContent: @Composable () -> Unit = {}
+) {
+    var loading by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        delay(3000)
+        loading = false
+    }
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Image(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(360.dp),
+            painter = painterResource(id = res),
+            contentDescription = ""
+        )
+//        bottomContent()
+        Box(modifier = Modifier.fillMaxSize()) {
+            when(loading) {
+                true -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                else -> DummyContent()
+            }
+        }
+    }
+}
+
+@Composable
+fun DummyContent() {
+    AnimatedVisibility(
+        visible = true,
+        enter = fadeIn(tween(durationMillis = 1000))
+    ) {
+        Column(
+            Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            repeat((20)) {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Text(text = "sample content text")
+                }
+            }
+        }
+    }
+}
