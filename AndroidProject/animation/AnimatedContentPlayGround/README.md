@@ -1,0 +1,1 @@
+<img src="./animate_container.gif" width="120">
