@@ -116,23 +116,23 @@ fun SampleContainer(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ){
                 Text(text = data.title)
-                Box(
-                    modifier = Modifier
-                        .border(width = 1.dp, color = Color.Black)
-                        .size(64.dp)
-                        .onGloballyPositioned {
-                            with(density) {
-                                targetViewInfo = targetViewInfo.copy(
-                                    topLeft = DpOffset(
-                                        // TODO Fix : Rootからだと、親Composeの影響を受けそう
-                                        x = it.positionInRoot().x.toDp(),
-                                        y = it.positionInRoot().y.toDp()
-                                    ),
-                                    width = it.size.width.toDp(),
-                                    height = it.size.height.toDp()
-                                )
-                            }
-                        }
+Box(
+modifier = Modifier
+.border(width = 1.dp, color = Color.Black)
+.size(64.dp)
+.onGloballyPositioned {
+    with(density) {
+        targetViewInfo = targetViewInfo.copy(
+            topLeft = DpOffset(
+                // TODO Fix : Rootからだと、親Composeの影響を受けそう
+                x = it.positionInRoot().x.toDp(),
+                y = it.positionInRoot().y.toDp()
+            ),
+            width = it.size.width.toDp(),
+            height = it.size.height.toDp()
+        )
+    }
+}
                         .background(Color.White)
                 ){
                     Image(

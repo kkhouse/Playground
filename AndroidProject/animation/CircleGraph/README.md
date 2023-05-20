@@ -1,0 +1,1 @@
+<img src="./canas_pieChart.gif" width="120">
