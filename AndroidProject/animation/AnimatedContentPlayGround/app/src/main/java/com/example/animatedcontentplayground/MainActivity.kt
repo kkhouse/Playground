@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalAnimationApi::class)
+@file:OptIn(ExperimentalAnimationApi::class, ExperimentalAnimationApi::class)
 
 package com.example.animatedcontentplayground
 
@@ -7,9 +7,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateDp
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -27,7 +31,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,9 +47,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
 
-data class ViewPoint(
+data class TargetViewInfo(
     val topLeft: DpOffset = DpOffset(0.dp,0.dp),
     val width: Dp = 0.dp,
     val height: Dp = 0.dp,
@@ -65,11 +67,10 @@ class MainActivity : ComponentActivity() {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(12.dp)
                     .background(Color.Cyan)
             ) {
                 var isSelected by remember { mutableStateOf(false) }
-                var viewData by remember { mutableStateOf(ViewPoint()) }
+                var viewData by remember { mutableStateOf(TargetViewInfo()) }
                 SampleContainer(
                     onTap = { data , viewPoint ->
                         isSelected = isSelected.not()
@@ -88,10 +89,10 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun SampleContainer(
-    onTap: (SampleData, ViewPoint) -> Unit
+    onTap: (SampleData, TargetViewInfo) -> Unit,
 ) {
     val density = LocalDensity.current
-    val list = listOf(SampleData(),SampleData(),SampleData(),SampleData(),SampleData(),SampleData(),SampleData(),)
+    val list = listOf(SampleData(),SampleData(),SampleData(),SampleData(),SampleData(),SampleData(),SampleData(),SampleData(),SampleData(),SampleData(),SampleData(),SampleData(),SampleData(),SampleData(),SampleData(),SampleData(),SampleData(),SampleData(),SampleData(),SampleData(),SampleData(),)
 
     LazyRow(
         modifier = Modifier
@@ -100,9 +101,9 @@ fun SampleContainer(
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(list) { data ->
-            var viewPoint by remember { mutableStateOf(ViewPoint()) }
+            var targetViewInfo by remember { mutableStateOf(TargetViewInfo()) }
             Column(
-                modifier = Modifier.clickable { onTap(data, viewPoint) },
+                modifier = Modifier.clickable { onTap(data, targetViewInfo) },
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ){
@@ -113,18 +114,18 @@ fun SampleContainer(
                         .size(64.dp)
                         .onGloballyPositioned {
                             with(density) {
-                                viewPoint = viewPoint.copy(
+                                targetViewInfo = targetViewInfo.copy(
                                     topLeft = DpOffset(
-                                        // TODO よくわからないが、周辺パディングの影響を受ける様子。ベタがきで引いておく。
-                                        x = it.positionInRoot().x.toDp() - 12.dp,
-                                        y = it.positionInRoot().y.toDp() - 12.dp
+                                        // TODO Fix : Rootからだと、親Composeの影響を受けそう
+                                        x = it.positionInRoot().x.toDp(),
+                                        y = it.positionInRoot().y.toDp()
                                     ),
                                     width = it.size.width.toDp(),
                                     height = it.size.height.toDp()
                                 )
                             }
                         }
-                        .background(Color.Magenta)
+                        .background(Color.White)
                 ){
                     Image(
                         modifier = Modifier.fillMaxSize(),
@@ -142,51 +143,50 @@ fun SampleContainer(
 
 @Composable
 fun SampleContainerAnimationBox(
-    data : ViewPoint,
+    data : TargetViewInfo,
     isVisible: Boolean,
     onBackPressed: () -> Unit = {},
-    content: @Composable BoxScope.() -> Unit = {}
+    content: @Composable BoxScope.() -> Unit = {},
+    transitionDuration: Int = 500
 ) {
-    var visibilityContent by remember { mutableStateOf(true) }
-    LaunchedEffect(isVisible) {
-        if (isVisible) { visibilityContent = true }
-    }
-
-    if(visibilityContent) {
-        var viewData by remember { mutableStateOf(data) }
-        val screenWidth = LocalConfiguration.current.screenWidthDp
-        val screenHeight = LocalConfiguration.current.screenHeightDp
-        val animateWidth by animateDpAsState(targetValue = viewData.width, label = "")
-        val animateOffsetX by animateDpAsState(targetValue = viewData.topLeft.x, label = "")
-        val animateOffsetY by animateDpAsState(targetValue = viewData.topLeft.y, label = "")
-        val animateHeight by animateDpAsState(targetValue = viewData.height, label = "",
-            finishedListener = {
-                if(!isVisible) { visibilityContent = false }
-            }
-        )
+    val screenWidth = LocalConfiguration.current.screenWidthDp
+    val screenHeight = LocalConfiguration.current.screenHeightDp
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = EnterTransition.None,
+        exit = ExitTransition.None
+    ) {
+        /*
+        各アニメーション値をAnimatedVisibilityScopeのtransitionで定義することで
+        animatedVisibilityの表示非表示のタイミングをアニメーション値の生存期間と一致させる
+         */
+        val width by transition.animateDp(
+            transitionSpec = { tween(durationMillis = transitionDuration) },
+            label = "content width"
+        ) { state -> if (state == EnterExitState.Visible) screenWidth.dp else data.width }
+        val height by transition.animateDp(
+            transitionSpec = { tween(durationMillis = transitionDuration) },
+            label = "content height"
+        ) { state -> if (state == EnterExitState.Visible) screenHeight.dp else data.height }
+        val offsetX by transition.animateDp(
+            transitionSpec = { tween(durationMillis = transitionDuration) },
+            label = "content offset x"
+        ) { state -> if (state == EnterExitState.Visible) 0.dp else data.topLeft.x }
+        val offsetY by transition.animateDp(
+            transitionSpec = { tween(durationMillis = transitionDuration) },
+            label = "content offset y"
+        ) { state -> if (state == EnterExitState.Visible) 0.dp else data.topLeft.y }
         Box(
             modifier = Modifier
-                .size(width = animateWidth, height = animateHeight)
-                .offset(animateOffsetX, animateOffsetY)
+                .size(width = width, height = height)
+                .offset(offsetX, offsetY)
                 .background(Color.White)
         ) {
             Image(
                 modifier = Modifier.fillMaxSize(),
-                painter = painterResource(id = viewData.data.img),
+                painter = painterResource(id = data.data.img),
                 contentDescription = ""
             )
-//             content()
-        }
-        LaunchedEffect(key1 = isVisible) {
-            if (isVisible) {
-                viewData.copy(
-                    width = screenWidth.dp, height = screenHeight.dp, topLeft = DpOffset(0.dp,0.dp),
-                ).also { viewData = it }
-            } else {
-                viewData.copy(
-                    width = data.width, height = data.height, topLeft = data.topLeft,
-                ).also { viewData = it }
-            }
         }
     }
 
@@ -194,3 +194,58 @@ fun SampleContainerAnimationBox(
         onBackPressed()
     }
 }
+//
+//@Composable
+//fun Demo(data : ViewPoint,
+//         isVisible: Boolean,
+//         onBackPressed: () -> Unit = {},
+//         content: @Composable BoxScope.() -> Unit = {})
+//{
+//    var visibilityContent by remember { mutableStateOf(true) }
+//    LaunchedEffect(isVisible) {
+//        if (isVisible) { visibilityContent = true }
+//    }
+//
+//    val screenWidth = LocalConfiguration.current.screenWidthDp
+//    val screenHeight = LocalConfiguration.current.screenHeightDp
+//    if(visibilityContent) {
+//        var viewData by remember { mutableStateOf(data) }
+//
+//        val animateWidth by animateDpAsState(targetValue = viewData.width, label = "")
+//        val animateOffsetX by animateDpAsState(targetValue = viewData.topLeft.x, label = "")
+//        val animateOffsetY by animateDpAsState(targetValue = viewData.topLeft.y, label = "")
+//        val animateHeight by animateDpAsState(targetValue = viewData.height, label = "",
+//            finishedListener = {
+//                if(!isVisible) { visibilityContent = false }
+//            }
+//        )
+//        Box(
+//            modifier = Modifier
+//                .size(width = animateWidth, height = animateHeight)
+//                .offset(animateOffsetX, animateOffsetY)
+//                .background(Color.White)
+//        ) {
+//            Image(
+//                modifier = Modifier.fillMaxSize(),
+//                painter = painterResource(id = viewData.data.img),
+//                contentDescription = ""
+//            )
+////             content()
+//        }
+//        LaunchedEffect(key1 = isVisible) {
+//            if (isVisible) {
+//                viewData.copy(
+//                    width = screenWidth.dp, height = screenHeight.dp, topLeft = DpOffset(0.dp,0.dp),
+//                ).also { viewData = it }
+//            } else {
+//                viewData.copy(
+//                    width = data.width, height = data.height, topLeft = data.topLeft,
+//                ).also { viewData = it }
+//            }
+//        }
+//    }
+//
+//    BackHandler {
+//        onBackPressed()
+//    }
+//}
